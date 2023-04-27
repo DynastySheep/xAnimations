@@ -1,3 +1,11 @@
 {
-    "sleep":"WORLD_HUMAN_BUM_SLUMPED"
+  "sleep": {
+    "scenario" : "WORLD_HUMAN_BUM_SLUMPED",
+    "controllable" : false
+  },
+
+  "spy": {
+      "scenario": "WORLD_HUMAN_BINOCULARS",
+      "controllable": true
+  }
 }
