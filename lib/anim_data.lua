@@ -1,11 +1,15 @@
 return {
     sleep = {
-        scenario = "WORLD_HUMAN_BUM_SLUMPED",
-        controllable = false,
+        title = "Sleepy time zzz",
+        scenario = "WORLD_HUMAN_BUM_SLUMPED"
     },
     spy = {
-        scenario = "WORLD_HUMAN_BINOCULARS",
-        controllable = true,
+        title = "Spying on your neighbours",
+        scenario = "WORLD_HUMAN_BINOCULARS"
     },
-    -- Add more animations here
+    test = {
+        title = "Testing",
+        dictionary = "base",
+        animation = "amb@medic@standing@kneel@base"
+    }
 }
