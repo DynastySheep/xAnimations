@@ -48,24 +48,73 @@ auto_updater.run_auto_update(auto_update_config)
 local animData = require("anim_data")
 util.require_natives(1627063482)
 
+local currentProp = nil
+
 -- Handle chat messages
 chat.on_message(function(sender, recipient, message, team_chat)
+
+    TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
+    if currentProp and ENTITY.DOES_ENTITY_EXIST(currentProp) then
+        entities.delete_by_handle(currentProp)
+    end
+
     if sender == players.user() and team_chat then
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(sender)
+        local ped = PLAYER.PLAYER_PED_ID()
         if message == "stop" or message == "s" then
             util.toast("Stopping Animation")
             TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
+
+            if currentProp and ENTITY.DOES_ENTITY_EXIST(currentProp) then
+                entities.delete_by_handle(currentProp)
+            end
         else
             local anim = animData[message]
+
+            local animScenario = anim.scenario
+            local animDict = anim.dictionary
+
             if anim ~= nil then
-                TASK.TASK_PLAY_ANIM(ped, anim.animation, anim.dictionary, 8.0f, 1.0f, 1000, 33, 0.1f, 0, 0, 0)
-                --TASK.TASK_START_SCENARIO_IN_PLACE(ped, anim.scenario, 0, false)
+                if animScenario ~= nil then
+                    TASK.TASK_START_SCENARIO_IN_PLACE(ped, animScenario, 0, false)
+                else
+                    if (anim.prop ~= null) then
+                        local pos = ENTITY.GET_ENTITY_COORDS(ped)
+                        local boneIndex = PED.GET_PED_BONE_INDEX(ped, anim.bone)
+                        local hash = util.joaat(anim.prop)
+                        STREAMING.REQUEST_MODEL(hash)
+
+                        while not STREAMING.HAS_MODEL_LOADED(hash) do
+                            util.yield()
+                        end
+
+                        local object = entities.create_object(hash, pos)
+
+                        currentProp = object
+                        ENTITY.ATTACH_ENTITY_TO_ENTITY(object, ped, boneIndex, 
+                        anim.placement[1] or 0.0, 
+                        anim.placement[2] or 0.0,
+                        anim.placement[3] or 0.0, 
+                        anim.placement[4] or 0.0, 
+                        anim.placement[5] or 0.0,
+                        anim.placement[6] or 0.0, 
+                        false, true, false, true, 1, true)
+                        STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(hash)
+                    end
+
+                    STREAMING.REQUEST_ANIM_DICT(animDict)
+
+                    while not STREAMING.HAS_ANIM_DICT_LOADED(animDict) do
+                        util.yield()
+                    end
+
+                    TASK.TASK_PLAY_ANIM(ped, animDict, anim.name, 8.0, 8.0, anim.duration, anim.flag, 0.0, false, false, false)
+
+                    STREAMING.REMOVE_ANIM_DICT(animDict)
+                end
             end
         end
     end
 end)
-
-
 
 menu.action(menu.my_root(), "Check for Update", {}, "The script will automatically check for updates at most daily, but you can manually check using this option anytime.", function()
     auto_update_config.check_interval = 0
